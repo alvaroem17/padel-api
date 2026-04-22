@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Dtos\CreateReservationDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReservationRequest;
 use App\Services\ReservationService;
@@ -18,20 +19,24 @@ class ReservationController extends Controller
 
     public function store(StoreReservationRequest $request)
     {
-        try{
-            $reservation = $this->ReservationService->create(
-                $request->user()->id,
-                $request->court_id,
-                $request->date,
-                $request->start_time
-            );
+        try {
+            // Convertir request a DTO
+            $createReservationDTO = CreateReservationDTO::fromArray([
+                'user_id' => $request->user()->id,
+                'court_id' => $request->court_id,
+                'date' => $request->date,
+                'start_time' => $request->start_time,
+            ]);
+
+            // Pasar DTO al servicio
+            $reservationDTO = $this->ReservationService->create($createReservationDTO);
 
             return response()->json([
                 'message' => 'Reservation created successfully',
-                'data' => $reservation
+                'data' => $reservationDTO->toArray()
             ], 201);
 
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to create reservation',
                 'error' => $e->getMessage()

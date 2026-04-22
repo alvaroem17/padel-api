@@ -17,12 +17,14 @@ class CourtController extends Controller
         $this->availabilityService = $availabilityService;
     }
 
-    public function index(int $paginate = 10){
-        $courts = Court::paginate($paginate);
+    public function index(int $paginate = 10)
+    {
+        $courts = Court::query()->paginate($paginate);
         return CourtResource::collection($courts);
     }
 
-    public function availability(Court $court, Request $request){
+    public function availability(Court $court, Request $request)
+    {
         $date = $request->query('date');
 
         if (!$date) {
@@ -31,10 +33,11 @@ class CourtController extends Controller
             ], 422);
         }
 
-        $availability = $this->availabilityService->getAvailability($court->id, $date);
+        // Obtener disponibilidad usando DTO
+        $availabilityDTO = $this->availabilityService->getAvailability($court->id, $date);
 
         return response()->json([
-            'data' => $availability
+            'data' => $availabilityDTO->toArray()
         ]);
     }
 }

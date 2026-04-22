@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Dtos\CreateReservationDTO;
+use App\Dtos\ReservationDTO;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Exception;
@@ -14,17 +16,25 @@ class ReservationService
         '20:00', '21:30'
     ];
 
-    public function create(int $userId, int $courtId, string $date, string $startTime): Reservation
+    /**
+     * Crear una nueva reserva desde un DTO
+     *
+     * @param CreateReservationDTO $dto
+     * @return ReservationDTO
+     * @throws Exception
+     */
+    public function create(CreateReservationDTO $dto): ReservationDTO
     {
         // 1. Validar slot válido
-        if (!in_array($startTime, $this->validSlots)) {
+        if (!in_array($dto->startTime, $this->validSlots)) {
             throw new Exception("Invalid time slot");
         }
 
         // 2. Comprobar si ya está reservado
-        $exists = Reservation::where('court_id', $courtId)
-            ->where('date', $date)
-            ->where('start_time', $startTime)
+        $exists = Reservation::query()
+            ->where('court_id', $dto->courtId)
+            ->where('date', $dto->date)
+            ->where('start_time', $dto->startTime)
             ->exists();
 
         if ($exists) {
@@ -32,15 +42,17 @@ class ReservationService
         }
 
         // 3. Calcular end_time
-        $endTime = Carbon::parse($startTime)->addMinutes(90)->format('H:i');
+        $endTime = Carbon::parse($dto->startTime)->addMinutes(90)->format('H:i');
 
         // 4. Crear reserva
-        return Reservation::create([
-            'user_id' => $userId,
-            'court_id' => $courtId,
-            'date' => $date,
-            'start_time' => $startTime,
+        $reservation = Reservation::create([
+            'user_id' => $dto->userId,
+            'court_id' => $dto->courtId,
+            'date' => $dto->date,
+            'start_time' => $dto->startTime,
             'end_time' => $endTime,
         ]);
+
+        return ReservationDTO::fromModel($reservation);
     }
 }

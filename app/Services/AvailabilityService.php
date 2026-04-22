@@ -2,30 +2,43 @@
 
 namespace App\Services;
 
+use App\Dtos\AvailabilityDTO;
 use App\Models\Reservation;
 
 class AvailabilityService
 {
-    public function getAvailability(int $courtId, string $date): array
+    /**
+     * Obtener disponibilidad de una cancha para una fecha específica
+     *
+     * @param int $courtId
+     * @param string $date Formato: YYYY-MM-DD
+     * @return AvailabilityDTO
+     */
+    public function getAvailability(int $courtId, string $date): AvailabilityDTO
     {
         $slots = $this->generateSlots();
 
-        $reservations = Reservation::where('court_id', $courtId)
+        $reservations = Reservation::query()->where('court_id', $courtId)
             ->where('date', $date)
             ->get();
 
-        return collect($slots)->map(function ($slot) use ($reservations) {
+            $availableSlots = collect($slots)
+                ->filter(function ($slot) use ($reservations) {
+                $isBooked = $reservations->contains(function ($reservation) use ($slot) {
+                    return $reservation->start_time === $slot['start'];
+                });
+                
+                return !$isBooked;
+            })
+            ->map(fn($slot) => $slot['start'])
+            ->values()
+            ->toArray();
 
-            $isBooked = $reservations->contains(function ($reservation) use ($slot) {
-                return $reservation->start_time === $slot['start'];
-            });
-
-            return [
-                'start' => $slot['start'],
-                'end' => $slot['end'],
-                'available' => !$isBooked
-            ];
-        })->values()->toArray();
+        return new AvailabilityDTO(
+            courtId: $courtId,
+            date: $date,
+            availableSlots: $availableSlots
+        );
     }
 
     private function generateSlots(): array
