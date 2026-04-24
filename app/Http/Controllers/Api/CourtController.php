@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\CourtResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Court;
 use Illuminate\Http\Request;
