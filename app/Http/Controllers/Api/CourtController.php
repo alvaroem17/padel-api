@@ -25,9 +25,13 @@ class CourtController extends Controller
 
     public function index(Request $request)
     {
-        $paginate = $request->query('paginate', 10);
-        $courts = $this->courtService->getAll($paginate);
-        return CourtResource::collection($courts);
+        try {
+            $paginate = $request->query('paginate', 10);
+            $courts = $this->courtService->getAll($paginate);
+            return $this->paginatedResponse($courts);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
     }
 
     public function availability(Court $court, Request $request)
@@ -94,7 +98,7 @@ class CourtController extends Controller
         try {
             $this->courtService->delete($court->id);
 
-            return $this->successResponse($court->toArray(), 'Court deleted successfully');
+            return $this->successResponse(null, 'Court deleted successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 400);
         }

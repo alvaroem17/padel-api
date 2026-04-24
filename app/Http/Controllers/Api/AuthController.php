@@ -67,7 +67,13 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            $success = $this->authService->logout($request->user());
+            $user = $request->user();
+
+            if (!$user) {
+                return $this->errorResponse('User not authenticated', 401);
+            }
+
+            $success = $this->authService->logout($user);
 
             if ($success) {
                 return $this->successResponse(null, 'Logged out successfully');

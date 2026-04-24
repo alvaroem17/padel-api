@@ -37,7 +37,7 @@ class ReservationController extends Controller
             return $this->successResponse($reservationDTO->toArray(), 'Reservation created successfully', 201);
 
         } catch (Exception $e) {
-            return $this->errorResponse('Failed to create reservation', 500, $e->getMessage());
+            return $this->errorResponse('Failed to create reservation', 500, ['error' => $e->getMessage()]);
         }
     }
 
