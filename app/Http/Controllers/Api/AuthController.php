@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ApiResponse;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
+    use ApiResponse;
+
     private $authService;
 
     public function __construct(AuthService $authService)
@@ -30,12 +33,12 @@ class AuthController extends Controller
                 $validatedData['password']
             );
 
-            return response()->json([
+            return $this->successResponse([
                 'user' => $result['user']->toArray(),
                 'token' => $result['token']
-            ], 201);
+            ], 'User registered successfully', 201);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 
@@ -52,12 +55,12 @@ class AuthController extends Controller
                 $validatedData['password']
             );
 
-            return response()->json([
+            return $this->successResponse([
                 'user' => $result['user']->toArray(),
                 'token' => $result['token']
-            ], 200);
+            ], 'Logged in successfully');
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 401);
+            return $this->errorResponse($e->getMessage(), 401);
         }
     }
 
@@ -67,12 +70,12 @@ class AuthController extends Controller
             $success = $this->authService->logout($request->user());
 
             if ($success) {
-                return response()->json(['message' => 'Logged out successfully'], 200);
+                return $this->successResponse(null, 'Logged out successfully');
             }
 
-            return response()->json(['message' => 'Failed to logout'], 400);
+            return $this->errorResponse('Failed to logout', 400);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 }

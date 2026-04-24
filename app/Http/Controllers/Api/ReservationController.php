@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Dtos\CreateReservationDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReservationRequest;
+use App\Http\Traits\ApiResponse;
 use App\Services\ReservationService;
 use Exception;
 
 class ReservationController extends Controller
 {
+    use ApiResponse;
+
     private $ReservationService;
 
     public function __construct(ReservationService $ReservationService)
@@ -31,16 +34,10 @@ class ReservationController extends Controller
             // Pasar DTO al servicio
             $reservationDTO = $this->ReservationService->create($createReservationDTO);
 
-            return response()->json([
-                'message' => 'Reservation created successfully',
-                'data' => $reservationDTO->toArray()
-            ], 201);
+            return $this->successResponse($reservationDTO->toArray(), 'Reservation created successfully', 201);
 
         } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Failed to create reservation',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Failed to create reservation', 500, $e->getMessage());
         }
     }
 

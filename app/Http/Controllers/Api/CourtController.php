@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CourtResource;
+use App\Http\Traits\ApiResponse;
 use App\Models\Court;
 use Illuminate\Http\Request;
 use App\Services\AvailabilityService;
 use App\Services\CourtService;
 
 class CourtController extends Controller
-{   
+{
+    use ApiResponse;
+
     private $courtService;
     private $availabilityService;
 
@@ -32,22 +35,16 @@ class CourtController extends Controller
         $date = $request->query('date');
 
         if (!$date) {
-            return response()->json([
-                'message' => 'date is required'
-            ], 422);
+            return $this->errorResponse('date is required', 422);
         }
 
         try {
             // Obtener disponibilidad usando DTO
             $availabilityDTO = $this->availabilityService->getAvailability($court->id, $date);
 
-            return response()->json([
-                'data' => $availabilityDTO->toArray()
-            ]);
+            return $this->successResponse($availabilityDTO->toArray());
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 400);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 
@@ -60,13 +57,9 @@ class CourtController extends Controller
 
             $courtDTO = $this->courtService->create($validatedData['name']);
 
-            return response()->json([
-                'data' => $courtDTO->toArray()
-            ], 201);
+            return $this->successResponse($courtDTO->toArray(), 'Created successfully', 201);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 400);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 
@@ -75,13 +68,9 @@ class CourtController extends Controller
         try {
             $courtDTO = $this->courtService->getById($court->id);
 
-            return response()->json([
-                'data' => $courtDTO->toArray()
-            ]);
+            return $this->successResponse($courtDTO->toArray());
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 404);
+            return $this->errorResponse($e->getMessage(), 404);
         }
     }
 
@@ -94,13 +83,9 @@ class CourtController extends Controller
 
             $courtDTO = $this->courtService->update($court->id, $validatedData['name']);
 
-            return response()->json([
-                'data' => $courtDTO->toArray()
-            ]);
+            return $this->successResponse($courtDTO->toArray());
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 400);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 
@@ -109,13 +94,9 @@ class CourtController extends Controller
         try {
             $this->courtService->delete($court->id);
 
-            return response()->json([
-                'message' => 'Court deleted successfully'
-            ]);
+            return $this->successResponse($court->toArray(), 'Court deleted successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 400);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 }
